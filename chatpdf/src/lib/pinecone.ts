@@ -1,4 +1,6 @@
 import { PineconeClient } from "@pinecone-database/pinecone";
+import { downloadFromS3 } from "./s3-server";
+import {PDFLoader} from 'langchain/document_loaders/fs/pdf'
 
 let pinecone: PineconeClient | null = null;
 
@@ -14,5 +16,13 @@ export const getPineconeClient = async () => {
 }
 
 export async function loadS3IntoPinecone(fileKey: string) {
-    
+    // 1. obtain the pdf -> download and read from pdf
+    console.log("downloading s3 into file system")
+    const file_name = downloadFromS3(fileKey);
+    if (!file_name) {
+        throw new Error('could not download from s3')
+    }
+    const loader = new PDFLoader(file_name);
+    const pages = await loader.load();
+    return pages;
 }
